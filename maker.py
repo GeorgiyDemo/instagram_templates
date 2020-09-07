@@ -12,7 +12,6 @@ class ImageGenerator:
         self.first_text = first_text
         self.second_text = second_text
         self.country = country
-
         self.processing()
 
     def crop_img(self, img):
@@ -55,6 +54,7 @@ class ImageGenerator:
         # Предобработка флага
         national_flag = self.resizer(national_flag, 190)
         national_flag = ImageOps.expand(national_flag, border=3, fill="black")
+        width_nationalflag, height_nationalflag = national_flag.size
 
         # Создаем пустое изображение
         background = Image.new("RGB", (width, height), (255, 255, 255))
@@ -63,7 +63,9 @@ class ImageGenerator:
         background.paste(photo)
 
         # Добавляем прямоугольник вниз
-        draw.rectangle(((0, 898), (1080, 1080)), fill="white")
+        photo_height = 898
+        draw.rectangle(((0, photo_height), (1080, 1080)), fill="white")
+        rectangle_height = 1080 - photo_height
 
         # Добавляем основной текст
         fontsize = 50
@@ -83,8 +85,11 @@ class ImageGenerator:
             (left, 1000), self.second_text, font=font, fill=(6, 26, 113), align="center"
         )
 
-        # Добавляем флаг
-        background.paste(national_flag, (25, 925))
+        # Вычисляем место флага и добавляем его
+        flag_insertposition = (
+            photo_height + (rectangle_height - height_nationalflag) / 2
+        )
+        background.paste(national_flag, (25, int(flag_insertposition)))
 
         # Добавляем лого
         background.paste(company_logo, (850, 925))
