@@ -1,0 +1,30 @@
+version: '3.1'
+
+services:
+
+    flask:
+        build: flask/.
+        ports:
+            - "5000:5000"
+        restart: always
+        volumes:
+          - ./flask/code/:/app/code/
+        networks:
+            - instagram-network
+
+    telegram:
+        build: telegram/.
+        depends_on:
+            - flask
+        volumes:
+            - ./telegram/code/:/app/code/
+        networks:
+            - instagram-network
+        environment:
+            TELEGRAM_TOKEN: ${TELEGRAM_TOKEN}
+            TELEGRAM_PROXY: ${TELEGRAM_PROXY}
+        restart: always
+
+networks:
+    instagram-network:
+        driver: bridge

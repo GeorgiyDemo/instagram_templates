@@ -1,14 +1,18 @@
+#TODO Адаптивный шрифт!
 from PIL import ImageDraw, ImageFont, Image, ImageOps
 
 
 class ImageGenerator:
-    TTF_SOURCE = "./times.ttf"
-    LOGO_SOURCE = "./logo.jpg"
+    TTF_SOURCE = "./content/times.ttf"
+    LOGO_SOURCE = "./content/logo.jpg"
 
-    def __init__(self, input_img, output_img, first_text, second_text, country="ecu"):
+    def __init__(self, input_img, first_text, second_text, country="ecu"):
+
+
+        #Результат преобоазования 
+        self.result = None
 
         self.input_img = input_img
-        self.output_img = output_img
         self.first_text = first_text
         self.second_text = second_text
         self.country = country
@@ -31,11 +35,12 @@ class ImageGenerator:
         return img
 
     def processing(self):
+        
         # Открываем основное изображение
         photo = Image.open(self.input_img)
         width, height = photo.size
         # Открываем флаг
-        national_flag = Image.open("./flags/" + self.country.lower() + ".png")
+        national_flag = Image.open("./content/flags/" + self.country.lower() + ".png")
         # Открываем лого
         company_logo = Image.open(self.LOGO_SOURCE)
 
@@ -95,4 +100,4 @@ class ImageGenerator:
         background.paste(company_logo, (850, 925))
 
         # Сохраняем изображение
-        background.save(self.output_img)
+        self.result = background
