@@ -1,6 +1,8 @@
 from maker import ImageGenerator
 import json
 from flask import Flask, request
+import base64
+from io import BytesIO
 
 
 app = Flask(__name__)
@@ -18,7 +20,11 @@ def create_place():
     image = request.files['image']
     img_obj = ImageGenerator(image,title_text,subtitle_text,nationalflag_code)
     if img_obj.result != None:
-        return {"exception" : False, "result" : img_obj.result}
+
+        buffered = BytesIO()
+        img_obj.result.save(buffered, format="JPEG")
+        img_str = base64.b64encode(buffered.getvalue())
+        return {"exception" : False, "result" : img_str.decode("utf-8")}
     return {"exception" : True}
     
 

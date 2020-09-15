@@ -26,8 +26,6 @@ RUN apt-get install -y libxml2-dev libxslt-dev
 ADD . /app
 WORKDIR /app
 
-ADD requirements.txt /app/
-WORKDIR /app
-
 RUN pip3 install -r requirements.txt
+
 CMD ["python3", "./code/server.py"]
