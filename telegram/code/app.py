@@ -7,11 +7,11 @@ import requests
 import telegram
 from telegram.error import NetworkError, Unauthorized
 
+
 class TelegramCli:
     """Telegram CLI"""
 
     def __init__(self, token, proxy):
-
 
         self.buffer_dict = {}
         self.update_id = None
@@ -45,11 +45,13 @@ class TelegramCli:
             else:
                 user_msg = update.message.text
 
-            #Если это начало работы с ботом
+            # Если это начало работы с ботом
             if user_msg == "/start":
-                update.message.reply_text("Привет, пришли мне изображение в виде документа и я сделаю шаблон для instagram")
+                update.message.reply_text(
+                    "Привет, пришли мне изображение в виде документа и я сделаю шаблон для instagram"
+                )
 
-            #Если пользователь прислал файл
+            # Если пользователь прислал файл
             elif update.message.document is not None:
                 file_data = update.message.document
                 file_name = file_data["file_name"]
@@ -59,38 +61,53 @@ class TelegramCli:
                 new_file.download(file_source)
 
                 self.buffer_dict[user_id] = file_source
-                update.message.reply_text('Теперь отправь параматры в следующем виде:\n "Заголовок" "подзаголовок" "код_страны"')
+                update.message.reply_text(
+                    'Теперь отправь параматры в следующем виде:\n "Заголовок" "подзаголовок" "код_страны"'
+                )
 
-            #Если пользователь отправил сообщение и он есть в buffer_dict, то это параматры для файла
+            # Если пользователь отправил сообщение и он есть в buffer_dict, то это параматры для файла
             elif user_msg != "" and user_id in self.buffer_dict:
-                
-                file_args = list(map(lambda x: x.replace("\"", ""),[value for value in user_msg.split("\" \"")]))
+
+                file_args = list(
+                    map(
+                        lambda x: x.replace('"', ""),
+                        [value for value in user_msg.split('" "')],
+                    )
+                )
                 if len(file_args) == 3:
                     title, subtitle, flag = file_args
 
                     print(self.buffer_dict[user_id])
-                    with open(self.buffer_dict[user_id],"rb") as file:
-                        r = requests.post("http://flask:5000/create_image", data={"title" : title, "subtitle" : subtitle, "flag" : flag}, files={"image" : file}).json()
-                    
+                    with open(self.buffer_dict[user_id], "rb") as file:
+                        r = requests.post(
+                            "http://flask:5000/create_image",
+                            data={"title": title, "subtitle": subtitle, "flag": flag},
+                            files={"image": file},
+                        ).json()
+
                     if not r["exception"]:
                         imgdata = BytesIO(base64.b64decode(r["result"]))
-                        imgdata.name = 'image.jpg'
+                        imgdata.name = "image.jpg"
                         imgdata.seek(0)
-                        self.bot.send_document(chat_id=update.message.chat_id, document=imgdata)
-                        
+                        self.bot.send_document(
+                            chat_id=update.message.chat_id, document=imgdata
+                        )
+
                     else:
                         update.message.reply_text("Flask возвратил ошибку")
 
                     del self.buffer_dict[user_id]
-                
+
                 else:
                     update.message.reply_text("Некорректный ввод параметров")
+
 
 def main():
 
     tg_token = os.getenv("TELEGRAM_TOKEN", None)
     tg_proxy = os.getenv("TELEGRAM_PROXY", None)
     TelegramCli(tg_token, tg_proxy)
+
 
 if __name__ == "__main__":
     main()
