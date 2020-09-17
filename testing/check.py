@@ -12,11 +12,3 @@ if not r["exception"]:
     img_data = base64.b64decode(r["result"])
     with open('./result.jpg', 'wb') as f:
         f.write(img_data)
-
-# from io import BytesIO
-# bio = BytesIO()
-# bio.name = 'image.jpeg'
-# image.save(bio, 'JPEG')
-# bio.seek(0)
-# bot.send_photo(chat_id, photo=bio)
-# 

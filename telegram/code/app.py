@@ -1,5 +1,7 @@
 import os
 import time
+import base64
+from io import BytesIO
 
 import requests
 import telegram
@@ -45,7 +47,7 @@ class TelegramCli:
 
             #Если это начало работы с ботом
             if user_msg == "/start":
-                update.message.reply_text("Привет, пришли мне изображение")
+                update.message.reply_text("Привет, пришли мне изображение в виде документа и я сделаю шаблон для instagram")
 
             #Если пользователь прислал файл
             elif update.message.document is not None:
@@ -57,20 +59,28 @@ class TelegramCli:
                 new_file.download(file_source)
 
                 self.buffer_dict[user_id] = file_source
-                update.message.reply_text("СПАСИБО ЗА ФАЙЛ, Я ЕГО ЗАГРУЗИЛ\nТеперь пришли параметры для формирования изображения")
+                update.message.reply_text('Теперь отправь параматры в следующем виде:\n "Заголовок" "подзаголовок" "код_страны"')
 
             #Если пользователь отправил сообщение и он есть в buffer_dict, то это параматры для файла
             elif user_msg != "" and user_id in self.buffer_dict:
                 
-                file_args = list(map(lambda x: x.replace("\"", ""),[value for value in user_msg.split(" ")]))
+                file_args = list(map(lambda x: x.replace("\"", ""),[value for value in user_msg.split("\" \"")]))
                 if len(file_args) == 3:
                     title, subtitle, flag = file_args
-                    with open(self.buffer_dict[user_id]) as file:
+
+                    print(self.buffer_dict[user_id])
+                    with open(self.buffer_dict[user_id],"rb") as file:
                         r = requests.post("http://flask:5000/create_image", data={"title" : title, "subtitle" : subtitle, "flag" : flag}, files={"image" : file}).json()
                     
-    
-                    update.message.reply_text("Ваш результат:")
-                    
+                    if not r["exception"]:
+                        imgdata = BytesIO(base64.b64decode(r["result"]))
+                        imgdata.name = 'image.jpg'
+                        imgdata.seek(0)
+                        self.bot.send_document(chat_id=update.message.chat_id, document=imgdata)
+                        
+                    else:
+                        update.message.reply_text("Flask возвратил ошибку")
+
                     del self.buffer_dict[user_id]
                 
                 else:
